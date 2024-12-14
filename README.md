@@ -28,6 +28,14 @@ Este projeto implementa um pipeline para automatizar a limpeza de dados em conju
 * Criar testes unitários para garantir a qualidade do código.
 * Implementar tratamento de erros mais robusto.
 
+## Melhorias
+
+* **Validação de tipo de dado:** Implementar verificações para garantir que as colunas tenham o tipo de dado esperado (int, float, string, data, etc.).
+* Tratamento de dados inconsistentes: Adicionar lógica para lidar com dados inconsistentes, como diferentes formatos de data ou separadores decimais.
+* Normalização/Padronização: Incluir opções para normalizar ou padronizar dados numéricos.
+* Limpeza de texto: Adicionar funções para limpar texto, como remover pontuação, converter para minúsculas, remover stop words, etc. (se aplicável).
+* Relatório de limpeza: Gerar um relatório resumindo as ações de limpeza realizadas, como o número de valores ausentes removidos, outliers detectados, etc.
+
 ## Autor
 Fernando Torres Ferreira da Silva
 fernando-torres@live.com
