@@ -1,41 +1,56 @@
-# Pipeline Automatizado de Limpeza de Dados
+# 🛡️ Pipeline ELT de Conformidade OFAC: Consolidação de Listas de Sanções (SDN, ADD, ALT)
 
-Este projeto implementa um pipeline para automatizar a limpeza de dados em conjuntos de dados brutos. O pipeline inclui as seguintes etapas:
+## 📖 Descrição do Projeto
 
-* **Carregamento de dados:** Lê dados de um arquivo CSV.
-* **Tratamento de valores ausentes:** Remove linhas com valores ausentes ou preenche com a média das colunas numéricas.
-* **Formatação de dados:** Converte colunas para os tipos de dados corretos (data, categórico).
-* **Detecção de outliers:** Identifica e remove outliers em colunas numéricas usando o Z-score.
+Este projeto implementa um Pipeline **ELT (Extract, Load, Transform)** de nível profissional, desenvolvido em Python e Pandas, para consumir e consolidar as principais listas de sanções do **Office of Foreign Assets Control (OFAC)**.
 
-## Uso
+O objetivo é transformar os dados brutos, distribuídos em múltiplos arquivos CSV (formato legado via API), em um **Dataset de Conformidade** único e limpo. Isso é essencial para sistemas de *screening* e diligência devida (Due Diligence).
 
-1.  **Instalação:** Certifique-se de ter as bibliotecas necessárias instaladas (`pandas`, `numpy`).
-2.  **Configuração:** Substitua `'seu_arquivo.csv'` pelo caminho do seu arquivo de dados.
-3.  **Execução:** Execute o notebook `pipeline_limpeza_dados.ipynb`.
-4.  **Saída:** Os dados limpos serão salvos em `dados_limpos.csv`.  Um arquivo de log (`limpeza_dados.log`) registrará as ações realizadas e eventuais erros.
+### 🎯 Funcionalidades e Foco em Qualidade de Dados
 
-## Funcionalidades
+O pipeline garante a fidelidade dos dados e a aderência às regras específicas da OFAC:
 
-* **`carregar_dados(caminho_arquivo)`:** Carrega os dados de um arquivo CSV.
-* **`tratar_valores_ausentes(df, estrategia='remover_linhas')`:**  Trata valores ausentes usando a estratégia especificada.
-* **`formatar_dados(df, colunas_data=None, colunas_categoricas=None)`:** Formata colunas de data e categóricas.
-* **`detectar_outliers(df, colunas_numericas, metodo='zscore', limiar=3)`:** Detecta e remove outliers.
+* **Extração e Mesclagem Relacional:** Consome `SDN.CSV`, `ADD.CSV` (Endereços) e `ALT.CSV` (Aliases Fortes) e os une usando a chave primária `ent_num`.
+* **Tratamento de Nulos Legados:** Corrige o valor nulo específico da OFAC (`"-0-"`) e o trata como `NaN` durante a ingestão.
+* **Tratamento de Aliases Críticos:** Implementa a lógica de RegEx para extrair e padronizar os **"Weak Aliases"** (Aliases Fracos) da coluna `Remarks`, consolidando-os com os Aliases Fortes do `ALT.CSV`.
+* **Limpeza e Outliers:** Garante a tipagem correta das colunas (Numérico/Categórico) e utiliza o método **IQR (Interquartile Range)** para detecção e remoção de *outliers* em colunas de medição (e.g., `Tonnage`, `GRT`).
+* **Relatório de Qualidade (DQR):** Gera um relatório final que quantifica o impacto da limpeza e o *ratio* de consolidação dos dados.
 
-## Próximos passos
+## 🛠️ Tecnologias Utilizadas
 
-* Implementar mais métodos para tratamento de outliers (IQR).
-* Adicionar mais estratégias para tratamento de valores ausentes (mediana, moda, imputação).
-* Criar testes unitários para garantir a qualidade do código.
-* Implementar tratamento de erros mais robusto.
+* **Linguagem:** Python
+* **ELT/Processamento:** Pandas, NumPy
+* **Conexão Externa:** `requests` (para API da OFAC)
+* **Qualidade/Logística:** `logging`, `re` (Regex)
 
-## Melhorias
+### Requisitos
 
-* **Validação de tipo de dado:** Implementar verificações para garantir que as colunas tenham o tipo de dado esperado (int, float, string, data, etc.).
-* **Tratamento de dados inconsistentes:** Adicionar lógica para lidar com dados inconsistentes, como diferentes formatos de data ou separadores decimais.
-* **Normalização/Padronização:** Incluir opções para normalizar ou padronizar dados numéricos.
-* **Limpeza de texto:** Adicionar funções para limpar texto, como remover pontuação, converter para minúsculas, remover stop words, etc. (se aplicável).
-* **Relatório de limpeza:** Gerar um relatório resumindo as ações de limpeza realizadas, como o número de valores ausentes removidos, outliers detectados, etc.
+Certifique-se de que as bibliotecas necessárias estejam instaladas:
 
-## Autor
-Fernando Torres Ferreira da Silva
-fernando-torres@live.com
+```bash
+pip install pandas numpy requests
+```
+📂 Estrutura do Projeto
+A execução do pipeline no formato de notebook gerará os seguintes arquivos no diretório configurado:
+```bash
+/seu_diretorio_de_trabalho
+├── pipeline_ofac.ipynb  # Notebook principal (código-fonte)
+├── dados_conformidade_ofac_consolidado.csv  # ⬅️ OUTPUT: Base de Dados Consolidada e Limpa
+└── /caminho/do/seu/log/
+    └── pipeline_ofac.log  # Logs detalhados de cada etapa do processamento
+```
+🚀 Guia de Execução
+1. Configuração do Ambiente e Log:O projeto utiliza um caminho absoluto para o arquivo de log. Antes de executar, localize e ajuste a variável LOG_FILE na primeira célula do seu notebook para um caminho acessível no seu sistema.
+
+```bash
+PythonLOG_FILE = '/content/drive/MyDrive/Pipelines/CSNU/log/pipeline_ofac.log' 
+# ^^^ ALTE ESTE CAMINHO PARA UM LOCAL VÁLIDO ^^^
+```
+
+2. Execução do Pipeline:Execute todas as células sequencialmente no pipeline_ofac.ipynb. O pipeline fará o download dos três arquivos, executará as etapas de limpeza e mesclagem, e gerará o relatório.
+3. Verificação dos Resultados:O console exibirá o Relatório de Qualidade e Consolidação detalhando as estatísticas do ent_num, a média de endereços/aliases por entidade e as linhas descartadas.O arquivo dados_conformidade_ofac_consolidado.csv será salvo, contendo todas as 23.888+ linhas consolidadas e limpas.
+
+🔑 Chaves de Conformidade no OutputAs colunas mais importantes para o screening no arquivo final são:
+Coluna Fonte OriginalDescriçãoent_numSDN, ADD, ALTID Único de Ligação.SDN_Name_CleanSDNNome Principal, padronizado (minúsculas).ProgramSDNSanctions Program (Ex: CUBA, IRAN, NPWMD).CountryADDPaís do Endereço (permite busca por jurisdição).Weak_Aliases_CleanSDN (Remarks)Aliases Fracos (nicknames, abreviações comuns), extraídos via RegEx.Strong_Aliases_CleanALTAliases Fortes (AKA, FKA) agregados em uma lista.
+
+Autor: Fernando Torres Ferreira da Silva | fernando-torres@live.com
